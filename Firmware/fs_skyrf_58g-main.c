@@ -7,6 +7,7 @@
  *
  * 16/12/13 Rev 1 - Initial Release
  * 25/01/14 Rev 2 - Board revision 2
+ * 01/04/14 Rev 2 - On startup, tune the 5.8GHz module before the band+channel beeps
  *
  * Compile using avr-gcc and the following commands:
  *    avr-gcc -g -Os -c -mmcu=attiny24 fs_skyrf_58g-main.c
@@ -310,8 +311,14 @@ int main(void)
   // Ensure the I/O ports are all off
   PORTB = 0x00;
   
-  // Read in the current band from EEPROM and set it
+  // Read in the current band from EEPROM 
   currentBand = eeprom_read_byte(0x00);
+  
+  // Set the channel and band when first powered on - before the beeps.
+  // Also give a moment for the goggles to initalise and set the relevant channel on the IO pins
+  _delay_ms(500);
+  currentChannel = readChannelFatshark();
+  setChannelModule((currentBand * 8)+currentChannel);
   
   // Make sure the current band is a valid number
   if (currentBand >= 4)
