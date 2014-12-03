@@ -89,14 +89,17 @@ SOFTWARE.
 #define MODULE_EN_LOW()     PORTB &= ~0x02;
 #define MODULE_EN_HIGH()    PORTB |= 0x02;
 
+#define TOTAL_BANDS         5
 
 //PROGMEM prog_uint16_t channelTable[] = {
 uint16_t channelTable[] = {
   0x2A05,	0x299B,	0x2991,	0x2987,	0x291D,	0x2913,	0x2909,	0x289F,	
   0x2903,	0x290C,	0x2916,	0x291F,	0x2989,	0x2992,	0x299C,	0x2A05,	
   0x2895,	0x288B,	0x2881,	0x2817,	0x2A0F,	0x2A19,	0x2A83,	0x2A8D,	
-  0x2906,	0x2910,	0x291A,	0x2984,	0x298E,	0x2998,	0x2A02,	0x2A0C
+  0x2906,	0x2910,	0x291A,	0x2984,	0x298E,	0x2998,	0x2A02,	0x2A0C,
+  0x289F, 0x2A05, 0x2A8D, 0x2A0C, 0x289F, 0x2A05, 0x2A8D, 0x2A0C,
 };
+
 
 void SERIAL_SENDBIT1()
 {
@@ -244,8 +247,25 @@ uint8_t readChannelButton()
   return LastButtonState;
 }
 
+void buzzLow()
+{
+uint8_t i;
+  
+  LED_ON();
+  BUZZER_ON();
+  
+  for (i=255;i>0;i--)
+  {
+    BUZZER_TOGGLE();
+    _delay_us(300);
+  }
+  
+  LED_OFF();
+  BUZZER_OFF();
+}
+
 // Buzz for 125ms
-void buzz4kHz()
+void buzzHigh()
 {
   uint8_t i;
   
@@ -263,28 +283,44 @@ void buzz4kHz()
 }
 
 // Buzz for 125mS
-void buzz4kHz_Short()
+void buzzHigh_Short()
 {
-  buzz4kHz();
+  buzzHigh();
 }
 
 // Buzz for 500ms
-void buzz4kHz_Long()
+void buzzHigh_Long()
 {
-  buzz4kHz();
-  buzz4kHz();
-  buzz4kHz();
-  buzz4kHz();
+  buzzHigh();
+  buzzHigh();
+  buzzHigh();
+  buzzHigh();
+}
+
+
+// Buzz for 125mS
+void buzzLow_Short()
+{
+  buzzLow();
+}
+
+// Buzz for 500ms
+void buzzLow_Long()
+{
+  buzzLow();
+  buzzLow();
+  buzzLow();
+  buzzLow();
 }
 
 // Don't buzz for a 750ms (used when band changing normally)
-inline void buzz4kHz_Long_Pause()
+inline void buzz_Long_Pause()
 {
   _delay_ms(750);
 }
 
 // Don't buzz for 250ms (used for startup)
-inline void buzz4kHz_Short_Pause()
+inline void buzz_Short_Pause()
 {
   _delay_ms(250);
 }
@@ -321,14 +357,15 @@ int main(void)
   setChannelModule((currentBand * 8)+currentChannel);
   
   // Make sure the current band is a valid number
-  if (currentBand >= 4)
+  if (currentBand >= TOTAL_BANDS)
     currentBand = 0;
+  
   
   // Beep out the current band
   for (i=0;i<=currentBand;i++)
   {
-    buzz4kHz_Long();
-    buzz4kHz_Long_Pause();
+    buzzLow_Long();
+    buzz_Long_Pause();
   }
   
   // force the current band to be set on the first loop run
@@ -344,8 +381,10 @@ int main(void)
       if (channelChangeFlag == 0)
       {
         currentBand++;
-        if (currentBand >= 4)
+        if (currentBand >= TOTAL_BANDS)
+        {
           currentBand = 0;
+        }
         
         eeprom_write_byte(0x00, currentBand);
         
@@ -355,8 +394,8 @@ int main(void)
         // Beep out the new band
         for (i=0;i<=currentBand;i++)
         {
-          buzz4kHz_Long();
-          buzz4kHz_Long_Pause();
+          buzzLow_Long();
+          buzz_Long_Pause();
         }
         channelChangeFlag = 1;
       }
@@ -375,8 +414,8 @@ int main(void)
       
       for (i=0;i<=currentChannel;i++)
       {
-        buzz4kHz_Short();
-        buzz4kHz_Short_Pause();
+        buzzHigh_Short();
+        buzz_Short_Pause();
       }
     }
   }
