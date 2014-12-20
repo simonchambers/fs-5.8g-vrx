@@ -257,7 +257,7 @@ uint8_t i;
   for (i=255;i>0;i--)
   {
     BUZZER_TOGGLE();
-    _delay_us(300);
+    _delay_us(150);
   }
   
   LED_OFF();
@@ -275,7 +275,7 @@ void buzzHigh()
   for (i=255;i>0;i--)
   {
     BUZZER_TOGGLE();
-    _delay_us(150);
+    _delay_us(125);
   }
   
   LED_OFF();
